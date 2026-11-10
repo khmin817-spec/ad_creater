@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SA·DA 소재 만들기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --bg:#F2F3F5; --card:#FFFFFF; --line:#E3E5E8; --text:#1E1E1E; --sub:#6B7076; --mute:#A3A8AE;
+    --blue:#326CF9; --naver:#03C75A; --pl-title:#0B3FC4; --pl-url:#1C8B3A; --stage:#EFEFEF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+  button,input,textarea{font:inherit;color:inherit}
+  .wrap{max-width:1280px;margin:0 auto;padding:24px 16px 60px}
+  .top h1{font-size:22px;font-weight:700}
+  .top p{color:var(--sub);margin-top:4px}
+
+  .tabs{display:flex;gap:4px;margin:20px 0 16px;border-bottom:1px solid var(--line)}
+  .tabs button{background:none;border:0;padding:12px 18px;font-size:15px;font-weight:600;color:var(--mute);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button.on{color:var(--text);border-bottom-color:var(--text)}
+  .tab{display:none}.tab.on{display:block}
+
+  .types{display:flex;gap:10px;flex-wrap:wrap;background:var(--card);padding:16px 20px;border-radius:10px;margin-bottom:12px}
+  .type{flex:1 1 280px;max-width:320px;cursor:pointer}
+  .type .rd{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:500}
+  .type input{accent-color:var(--blue);width:18px;height:18px}
+  .type .mirror{pointer-events:none}
+  .type .sample{display:flex;align-items:center;justify-content:space-between;background:#F2F2F2;border-radius:10px;padding:14px 14px 14px 14px;height:94px;border:2px solid transparent}
+  .type input:checked ~ .sample{border-color:var(--blue)}
+  .type .sample b{display:block;font-size:14px}
+  .type .sample span{font-size:12px;color:var(--sub)}
+
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:12px}
+  .card{background:var(--card);border-radius:10px;overflow:hidden}
+  .card-h{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line)}
+  .card-h h2{font-size:16px;font-weight:700}
+  .card-b{padding:24px}
+
+  .row{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:start;margin-bottom:18px}
+  .row>label{padding-top:10px;font-weight:600}
+  .req{color:#E5352B}
+  .opt{color:var(--mute);font-weight:400;font-size:12px}
+  .field{position:relative}
+  .field input,.field textarea{width:100%;border:1px solid #D5D8DC;border-radius:4px;padding:10px 64px 10px 14px;background:#fff;outline:none}
+  .field textarea{resize:none;height:84px}
+  .field input:focus,.field textarea:focus{border-color:var(--text)}
+  .field input.fixed{background:#F2F3F5;color:var(--sub);border-color:#E3E5E8;cursor:not-allowed}
+  .cnt{position:absolute;right:12px;top:10px;font-size:13px;color:var(--sub)}
+  .cnt.full{color:#E5352B}
+  .help{font-size:12px;color:var(--sub);margin-top:6px}
+  .linkbtn{background:none;border:0;font-size:12px;color:var(--sub);cursor:pointer;text-decoration:underline;float:right;margin-top:6px}
+  .tip-box{display:none;clear:both;background:#F7F8FA;border-radius:6px;padding:10px 12px;font-size:12px;color:var(--sub);margin-top:30px}
+  .tip-box.on{display:block}
+  .upbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D5D8DC;background:#fff;border-radius:4px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  .file-info{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--sub)}
+  .file-info button{background:none;border:0;color:#E5352B;cursor:pointer;font-size:12px}
+
+  .dl{background:var(--text);color:#fff;border:0;border-radius:4px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .dl:disabled{background:#CDD0D4;cursor:not-allowed}
+
+  /* 비즈보드 미리보기 */
+  .stage{position:relative;width:100%;aspect-ratio:1029/222;border-radius:14px;overflow:hidden;background:var(--stage)}
+  .stage canvas{width:100%;height:100%;display:block}
+  .guide{position:absolute;inset:0;pointer-events:none}
+  .guide .box{position:absolute;border:1.5px dashed #555}
+  .guide.off{display:none}
+  .ad{position:absolute;right:1.6%;top:6%;width:30px;height:30px;border-radius:50%;background:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#555;pointer-events:none}
+  .chk{display:flex;gap:18px;margin:14px 0 18px;font-size:13px;color:var(--sub)}
+  .chk label{display:flex;align-items:center;gap:6px;cursor:pointer}
+  .chk input{accent-color:var(--blue);width:17px;height:17px}
+
+  details.rule{background:#F7F8FA;border-radius:6px;margin-top:4px}
+  details.rule summary{padding:12px 16px;cursor:pointer;font-size:13px;list-style:none;display:flex;justify-content:space-between}
+  details.rule summary::after{content:"⌄";color:var(--mute)}
+  details.rule[open] summary::after{content:"⌃"}
+  details.rule ul{padding:0 16px 14px 32px;font-size:13px;color:var(--sub)}
+  details.rule li{margin:4px 0}
+
+  .sub-title{font-size:13px;font-weight:700;margin:24px 0 10px;color:var(--sub)}
+
+  /* 카카오톡 채팅 목록 목업 */
+  .phone{width:340px;max-width:100%;margin:0 auto;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:#fff}
+  .phone .bar{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 8px;font-weight:700;font-size:18px}
+  .phone .bar i{display:inline-block;width:18px;height:18px;border:2px solid #333;border-radius:50%;margin-left:12px}
+  .phone .bn{margin:6px 10px 10px;border-radius:8px;overflow:hidden;background:var(--stage);aspect-ratio:1029/222}
+  .phone .bn img{width:100%;height:100%;display:block}
+  .chat{display:flex;align-items:center;gap:12px;padding:9px 16px}
+  .chat .av{width:44px;height:44px;border-radius:16px;background:#E6E8EB;flex:none}
+  .chat .tx{flex:1}
+  .chat .tx div{height:10px;border-radius:5px;background:#E6E8EB}
+  .chat .tx div+div{margin-top:7px;width:70%;background:#F0F1F3}
+
+  /* 파워링크 미리보기 */
+  .serp{border:1px solid var(--line);border-radius:12px;background:#fff;max-width:440px;margin:0 auto;padding:14px 0 18px}
+  .sbox{display:flex;align-items:center;gap:10px;margin:0 14px 14px;border:2px solid var(--naver);border-radius:8px;padding:10px 12px;font-size:15px;font-weight:500}
+  .sbox .ic{width:16px;height:16px;border:2px solid var(--naver);border-radius:50%;position:relative;flex:none}
+  .sec{padding:0 16px}
+  .sec-h{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .sec-h b{color:var(--text);font-size:15px}
+  .adlabel{font-size:11px;border:1px solid #C9CCD0;border-radius:3px;padding:0 4px;color:var(--sub)}
+  .ad-item{padding:14px 0;border-bottom:1px solid var(--line)}
+  .site{display:flex;align-items:center;gap:6px;font-size:13px}
+  .fav{width:20px;height:20px;border-radius:50%;background:#F0F1F3;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--sub)}
+  .site .nm{font-weight:600}
+  .site .url{color:var(--pl-url)}
+  .pl-title{font-size:17px;color:var(--pl-title);margin-top:6px;font-weight:500;word-break:keep-all}
+  .pl-desc{font-size:14px;color:#404448;margin-top:4px;word-break:keep-all}
+  .ph{color:var(--mute)!important}
+  .pl-title b,.pl-desc b{font-weight:700}
+  .skel div{height:10px;border-radius:5px;background:#EEF0F2;margin-top:8px}
+
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  @media (max-width:480px){.row{grid-template-columns:1fr;gap:4px}.row>label{padding-top:0}.card-b{padding:16px}.card-h{padding:14px 16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>SA·DA 소재 만들기</h1>
+    <p>입력하면 미리보기에 바로 반영됩니다. 완성 후 이미지로 저장해 결과물에 첨부해 주세요.</p>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="pl" class="on">네이버 파워링크</button>
+    <button data-tab="bb">카카오 비즈보드</button>
+  </nav>
+
+  <!-- ================= 파워링크 ================= -->
+  <section class="tab on" id="tab-pl">
+    <div class="grid">
+      <div class="card">
+        <div class="card-h"><h2>구성 요소</h2></div>
+        <div class="card-b">
+          <div class="row"><label>검색 키워드<br><span class="opt">(미리보기용)</span></label>
+            <div class="field"><input id="plKw" value="명품 가방 사이즈" placeholder="검색 키워드를 입력하세요."></div></div>
+          <div class="row"><label>사이트명</label>
+            <div class="field"><input id="plSite" value="시크먼트" readonly class="fixed"></div></div>
+          <div class="row"><label>표시 URL</label>
+            <div class="field"><input id="plUrl" value="chicment.com" readonly class="fixed"></div></div>
+          <div class="row"><label>제목<span class="req">*</span></label>
+            <div><div class="field"><input id="plTitle" placeholder="제목을 입력하세요."><span class="cnt" id="plTitleCnt"></span></div>
+            <p class="help">공백 포함 15자</p></div></div>
+          <div class="row"><label>설명<span class="req">*</span></label>
+            <div><div class="field"><textarea id="plDesc" placeholder="설명을 입력하세요."></textarea><span class="cnt" id="plDescCnt"></span></div>
+            <p class="help">공백 포함 45자</p></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>소재 미리보기</h2><button class="dl" id="plDl" disabled>소재 다운로드</button></div>
+        <div class="card-b">
+          <div class="serp" id="plCapture">
+            <div class="sbox"><span class="ic"></span><span id="pvKw"></span></div>
+            <div class="sec">
+              <div class="sec-h"><b>파워링크</b><span id="pvKwH"></span><span class="adlabel">광고</span></div>
+              <div class="ad-item">
+                <div class="site"><span class="fav" id="pvFav"></span><span class="nm" id="pvSite"></span><span class="url" id="pvUrl"></span></div>
+                <div class="pl-title" id="pvTitle"></div>
+                <div class="pl-desc" id="pvDesc"></div>
+              </div>
+              <div class="ad-item skel"><div style="width:35%"></div><div style="width:60%;height:14px"></div><div style="width:90%"></div></div>
+            </div>
+          </div>
+          <details class="rule" style="margin-top:18px"><summary>빠른 광고 진행을 위해 꼭 지켜주세요!</summary>
+            <ul>
+              <li>제목 15자, 설명 45자 (공백 포함)</li>
+              <li>검색 키워드와 같은 단어는 굵게 표시돼요. 광고그룹 대표 키워드로 바꿔 가며 확인해 보세요.</li>
+              <li>'최고', '1위', '최저가' 등 근거 없는 최상급 표현은 검수에서 반려될 수 있어요.</li>
+              <li>특수문자·느낌표 반복은 지양해 주세요.</li>
+              <li>제목·설명이 랜딩 페이지(목록/포스트) 내용과 맞아야 해요.</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 비즈보드 ================= -->
+  <section class="tab" id="tab-bb">
+    <div class="types">
+      <label class="type">
+        <input type="radio" name="bbType" value="obj" checked hidden>
+        <div class="rd"><input type="radio" tabindex="-1" class="mirror" data-v="obj" checked>오브젝트형</div>
+        <div class="sample"><div><b>배경 없는 이미지</b><span>누끼(PNG) 이미지를 올려 주세요.</span></div>
+          <svg width="96" height="72" viewBox="0 0 96 72"><path d="M28 26h40l5 40H23z" fill="#BFC6D1"/><path d="M38 26v-6a10 10 0 0 1 20 0v6" fill="none" stroke="#8A93A1" stroke-width="4"/></svg></div>
+      </label>
+      <label class="type">
+        <input type="radio" name="bbType" value="thumb" hidden>
+        <div class="rd"><input type="radio" tabindex="-1" class="mirror" data-v="thumb">썸네일형</div>
+        <div class="sample"><div><b>사각형 사진</b><span>사진이 영역을 꽉 채워요.</span></div>
+          <svg width="100" height="70" viewBox="0 0 100 70"><rect width="100" height="70" rx="8" fill="#C9D3DF"/><circle cx="72" cy="22" r="8" fill="#F2F4F7"/><path d="M0 70l32-34 22 22 14-12 32 24z" fill="#9AA8BA"/></svg></div>
+      </label>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-h"><h2>구성 요소</h2></div>
+        <div class="card-b">
+          <div class="row"><label>이미지<span class="req">*</span></label>
+            <div>
+              <label class="upbtn">＋ 이미지 추가<input type="file" id="bbFile" accept="image/png,image/jpeg,image/webp" hidden></label>
+              <div class="file-info" id="bbFileInfo" hidden><span id="bbFileName"></span><button id="bbFileDel">삭제</button></div>
+              <p class="help" id="bbImgHelp">배경을 지운 PNG 이미지를 권장해요.</p>
+            </div></div>
+          <div class="row"><label>메인 카피<span class="req">*</span></label>
+            <div class="field"><input id="bbMain" placeholder="메인 카피를 입력하세요."><span class="cnt" id="bbMainCnt"></span></div></div>
+          <div class="row"><label>서브 카피</label>
+            <div><div class="field"><input id="bbSub" placeholder="서브 카피를 입력하세요."><span class="cnt" id="bbSubCnt"></span></div>
+            <button class="linkbtn" id="strikeBtn">취소선 입력방법</button>
+            <div class="tip-box" id="strikeTip">취소선을 넣을 글자 앞뒤에 <b>~</b>를 붙여 주세요. <b>~</b>는 글자 수에 포함되지 않아요.<br>예) ~39,000원~ 29,000원</div></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>소재 미리보기</h2><button class="dl" id="bbDl" disabled>배너 다운로드</button></div>
+        <div class="card-b">
+          <div class="stage">
+            <canvas id="bbCanvas"></canvas>
+            <div class="guide" id="bbGuide"><div class="box" id="bbGuideBox"></div></div>
+            <div class="ad">AD</div>
+          </div>
+          <div class="chk"><label><input type="checkbox" id="bbGuideChk" checked>가이드라인 보기</label></div>
+          <details class="rule"><summary>빠른 광고 진행을 위해 꼭 지켜주세요!</summary>
+            <ul>
+              <li>배너는 1029×222px 이미지로 저장돼요.</li>
+              <li>이미지는 점선 안쪽(이미지 영역)에 들어가요. 오브젝트형은 배경 없는 PNG를 써 주세요.</li>
+              <li>메인 카피·서브 카피 각 30자 (공백 포함)</li>
+              <li>'AD' 표시는 카카오가 자동으로 붙여요. 이미지에는 포함되지 않아요.</li>
+              <li>혜택 문구는 실제로 제공하는 내용만 써 주세요.</li>
+            </ul>
+          </details>
+
+          <p class="sub-title">카카오톡 채팅 목록 노출 예시</p>
+          <div class="phone">
+            <div class="bar">채팅<span><i></i><i></i></span></div>
+            <div class="bn"><img id="bbPhoneImg" alt="비즈보드 미리보기"></div>
+            <div class="chat"><div class="av"></div><div class="tx"><div style="width:40%"></div><div></div></div></div>
+            <div class="chat"><div class="av"></div><div class="tx"><div style="width:30%"></div><div></div></div></div>
+            <div class="chat"><div class="av"></div><div class="tx"><div style="width:45%"></div><div></div></div></div>
+            <div class="chat"><div class="av"></div><div class="tx"><div style="width:35%"></div><div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/* ---------- 탭 ---------- */
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === 'tab-' + b.dataset.tab));
+  if (b.dataset.tab === 'bb') drawBB();
+}));
+
+/* ---------- 글자 수 제한 (공백 포함, 초과 입력 차단) ---------- */
+function bindLimit(el, max, cntEl, onChange, ignore) {
+  let composing = false;
+  const len = v => [...(ignore ? v.replace(ignore, '') : v)].length;
+  const trim = () => {
+    let arr = [...el.value];
+    while (len(arr.join('')) > max) arr.pop();
+    if (arr.join('') !== el.value) el.value = arr.join('');
+  };
+  const upd = () => {
+    const n = len(el.value);
+    cntEl.textContent = n + ' / ' + max;
+    cntEl.classList.toggle('full', n >= max);
+    onChange();
+  };
+  el.addEventListener('compositionstart', () => composing = true);
+  el.addEventListener('compositionend', () => { composing = false; trim(); upd(); });
+  el.addEventListener('input', () => { if (!composing) trim(); upd(); });
+  upd();
+}
+
+/* ---------- 파워링크 ---------- */
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hl(text, kw) {
+  let h = esc(text);
+  const toks = kw.split(/\s+/).filter(t => t.length >= 2).map(t => esc(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  if (toks.length) h = h.replace(new RegExp('(' + toks.join('|') + ')', 'g'), '<b>$1</b>');
+  return h;
+}
+function renderPL() {
+  const kw = $('plKw').value.trim(), t = $('plTitle').value, d = $('plDesc').value;
+  const site = $('plSite').value.trim() || '사이트명';
+  $('pvKw').textContent = kw || '검색 키워드';
+  $('pvKwH').textContent = kw ? "'" + kw + "' 관련 광고" : '';
+  $('pvFav').textContent = site.charAt(0);
+  $('pvSite').textContent = site;
+  $('pvUrl').textContent = $('plUrl').value.trim();
+  const pt = $('pvTitle'), pd = $('pvDesc');
+  pt.innerHTML = t ? hl(t, kw) : '제목을 입력하세요.'; pt.classList.toggle('ph', !t);
+  pd.innerHTML = d ? hl(d, kw) : '설명을 입력하세요.'; pd.classList.toggle('ph', !d);
+  $('plDl').disabled = !(t.trim() && d.trim());
+}
+['plKw', 'plSite', 'plUrl'].forEach(id => $(id).addEventListener('input', renderPL));
+bindLimit($('plTitle'), 15, $('plTitleCnt'), renderPL);
+bindLimit($('plDesc'), 45, $('plDescCnt'), renderPL);
+$('plDesc').addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+
+/* ---------- 비즈보드 ---------- */
+const W = 1029, H = 222;
+const cv = $('bbCanvas'); cv.width = W; cv.height = H;
+const ctx = cv.getContext('2d');
+let img = null;
+const type = () => document.querySelector('input[name=bbType]:checked').value;
+const AREA = { obj: { x: 646, y: 0, w: 336, h: 222 }, thumb: { x: 680, y: 21, w: 300, h: 180 } };
+
+document.querySelectorAll('input[name=bbType]').forEach(r => r.addEventListener('change', () => {
+  document.querySelectorAll('.mirror').forEach(m => m.checked = m.dataset.v === r.value);
+  $('bbImgHelp').textContent = r.value === 'obj' ? '배경을 지운 PNG 이미지를 권장해요.' : '사진이 이미지 영역을 꽉 채우도록 잘려 들어가요.';
+  drawBB();
+}));
+
+$('bbFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { const i = new Image(); i.onload = () => { img = i; drawBB(); }; i.src = rd.result; };
+  rd.readAsDataURL(f);
+  $('bbFileName').textContent = f.name; $('bbFileInfo').hidden = false;
+});
+$('bbFileDel').addEventListener('click', () => { img = null; $('bbFile').value = ''; $('bbFileInfo').hidden = true; drawBB(); });
+$('bbGuideChk').addEventListener('change', e => $('bbGuide').classList.toggle('off', !e.target.checked));
+$('strikeBtn').addEventListener('click', () => $('strikeTip').classList.toggle('on'));
+
+// ~텍스트~ → 취소선
+function parse(str) {
+  const out = []; let s = false;
+  for (const ch of str) { if (ch === '~') { s = !s; continue; } out.push({ ch, s }); }
+  return out;
+}
+const str = a => a.map(c => c.ch).join('');
+function wrap(chars, maxW) {
+  const lines = []; let cur = [];
+  for (const c of chars) {
+    cur.push(c);
+    if (ctx.measureText(str(cur)).width > maxW && cur.length > 1) {
+      let sp = -1; cur.forEach((x, i) => { if (x.ch === ' ') sp = i; });
+      if (sp > 0) { lines.push(cur.slice(0, sp)); cur = cur.slice(sp + 1); }
+      else { const last = cur.pop(); lines.push(cur); cur = [last]; }
+    }
+  }
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+function drawLine(line, x, y, size) {
+  ctx.fillText(str(line), x, y);
+  let i = 0;
+  while (i < line.length) {
+    if (!line[i].s) { i++; continue; }
+    let j = i; while (j < line.length && line[j].s) j++;
+    const x1 = ctx.measureText(str(line.slice(0, i))).width;
+    const x2 = ctx.measureText(str(line.slice(0, j))).width;
+    ctx.fillRect(x + x1, y - size * 0.02, x2 - x1, Math.max(2, size * 0.06));
+    i = j;
+  }
+}
+
+function drawBB() {
+  const t = type(), a = AREA[t];
+  ctx.fillStyle = '#EFEFEF'; ctx.fillRect(0, 0, W, H);
+
+  // 이미지
+  if (img) {
+    if (t === 'obj') {
+      const r = Math.min(a.w / img.width, a.h / img.height);
+      const w = img.width * r, h = img.height * r;
+      ctx.drawImage(img, a.x + (a.w - w) / 2, a.y + a.h - h, w, h);
+    } else {
+      const r = Math.max(a.w / img.width, a.h / img.height);
+      const sw = a.w / r, sh = a.h / r;
+      ctx.save(); ctx.beginPath(); ctx.roundRect(a.x, a.y, a.w, a.h, 12); ctx.clip();
+      ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, a.x, a.y, a.w, a.h);
+      ctx.restore();
+    }
+  }
+
+  // 카피
+  const x = 48, maxW = a.x - x - 24;
+  const mainV = $('bbMain').value, subV = $('bbSub').value;
+  const main = parse(mainV || '메인 카피를 입력하세요.'), sub = parse(subV);
+  ctx.textBaseline = 'middle';
+
+  let ms = 40, mLines;
+  do { ctx.font = `700 ${ms}px Pretendard`; mLines = wrap(main, maxW); if (mLines.length > 2) ms -= 2; } while (mLines.length > 2 && ms > 26);
+  const mLH = ms * 1.3;
+
+  let ss = 26;
+  if (sub.length) { do { ctx.font = `400 ${ss}px Pretendard`; if (ctx.measureText(str(sub)).width > maxW) ss -= 1; else break; } while (ss > 18); }
+  const sLH = ss * 1.35, gap = sub.length ? 8 : 0;
+
+  const total = mLines.length * mLH + (sub.length ? gap + sLH : 0);
+  let y = (H - total) / 2;
+
+  ctx.font = `700 ${ms}px Pretendard`;
+  ctx.fillStyle = mainV ? '#1E1E1E' : '#8C9096';
+  mLines.forEach(l => { drawLine(l, x, y + mLH / 2, ms); y += mLH; });
+
+  if (sub.length) {
+    y += gap; ctx.font = `400 ${ss}px Pretendard`; ctx.fillStyle = '#555A60';
+    drawLine(sub, x, y + sLH / 2, ss);
+  }
+
+  // 가이드라인 (미리보기에만 표시)
+  const b = $('bbGuideBox');
+  b.style.left = (a.x / W * 100) + '%'; b.style.width = (a.w / W * 100) + '%';
+  b.style.top = (a.y / H * 100) + '%'; b.style.height = (a.h / H * 100) + '%';
+  b.style.borderTopStyle = t === 'obj' ? 'none' : 'dashed';
+  b.style.borderRadius = t === 'obj' ? '0' : '8px';
+
+  $('bbPhoneImg').src = cv.toDataURL('image/png');
+  $('bbDl').disabled = !(img && mainV.replace(/~/g, '').trim());
+}
+bindLimit($('bbMain'), 30, $('bbMainCnt'), drawBB, /~/g);
+bindLimit($('bbSub'), 30, $('bbSubCnt'), drawBB, /~/g);
+
+/* ---------- 다운로드 ---------- */
+const stamp = () => { const d = new Date(); return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '_' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0'); };
+function save(url, name) { const a = document.createElement('a'); a.href = url; a.download = name; a.click(); }
+$('bbDl').addEventListener('click', () => { drawBB(); save(cv.toDataURL('image/jpeg', 0.95), 'bizboard_' + stamp() + '.jpg'); });
+$('plDl').addEventListener('click', () => {
+  html2canvas($('plCapture'), { scale: 2, backgroundColor: '#ffffff' })
+    .then(c => save(c.toDataURL('image/jpeg', 0.95), 'powerlink_' + stamp() + '.jpg'));
+});
+
+/* ---------- 초기화 ---------- */
+renderPL(); drawBB();
+document.fonts.load('700 40px Pretendard').then(drawBB);
+document.fonts.ready.then(drawBB);
+</script>
+</body>
+</html>
